@@ -1,0 +1,14 @@
+{
+    "resourceName": "speechGenerator439796d7",
+    "convertPolicyName": "speechGeneratorPolicy439796d7",
+    "authRoleName": {
+        "Ref": "AuthRoleName"
+    },
+    "unauthRoleName": {
+        "Ref": "UnauthRoleName"
+    },
+    "convertType": "speechGenerator",
+    "language": "en-IN",
+    "voice": "Aditi",
+    "access": "auth"
+}
