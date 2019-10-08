@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useReducer, useRef } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import {
   FormControlLabel,
   FormGroup,
   LinearProgress,
-  Typography
+  Typography,
+  Box
 } from '@material-ui/core';
 import Switch from '@material-ui/core/Switch';
 
@@ -26,8 +26,8 @@ import mic from 'microphone-stream'; // collect microphone input as a stream of 
 import { TextField, Grid, makeStyles, Button, Fab } from '@material-ui/core';
 import MicIcon from '@material-ui/icons/Mic';
 import StopIcon from '@material-ui/icons/Stop';
-import generateTextToSpeech from './TextToSpeech';
-import NativeSelects from './NativeSelects';
+import { generateTextToSpeech, getTranslation } from './lib/aiUtils';
+import NativeSelects from './components/NativeSelects';
 
 // our converter between binary event streams messages and JSON
 Amplify.addPluggable(new AmazonAIPredictionsProvider());
@@ -44,20 +44,25 @@ const LANGUAGES = [
   { language: 'Russian', languageCode: 'ru', speaker: 'Tatyana' },
   { language: 'Spanish', languageCode: 'es', speaker: 'Conchita' }
 ];
+
 const eventStreamMarshaller = new EventStreamMarshaller(
   util_utf8_node.toUtf8,
   util_utf8_node.fromUtf8
 );
 
 // our global variables for managing state
+
+let destlan;
+let spkr;
+let eblspkr = true;
 let languageCode;
-//let region;
 let sampleRate;
-//let transcription = '';
 let socket;
 let micStream;
 let socketError = false;
 let transcribeException = false;
+let AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -105,21 +110,23 @@ const reducer = (state, action) => {
         partialTranslate: '',
         isTranscribing: false
       };
+    case 'error':
+      return {
+        ...state,
+        error: action.payload,
+        isPartial: false,
+        partialTranscript: '',
+        partialTranslate: '',
+        isTranscribing: false
+      };
   }
 };
 
 const App = () => {
-  const [key, setKey] = useState();
-  const [secret, setSecret] = useState();
-  const [sessionToken, setSessionToken] = useState();
   const [destinationLanguage, setDestinationLanguage] = useState('hi');
   const [speaker, setSpeaker] = useState('Aditi');
   const [enableSpeaker, setEnableSpeaker] = useState(true);
 
-  const transcribeFieldRef = useRef(null);
-  const translateFieldRef = useRef(null);
-
-  //const [isTranscribing, setIsTranscribing] = useState(false);
   const [
     {
       transcription,
@@ -128,7 +135,8 @@ const App = () => {
       partialTranslate,
       isPartial,
       resultId,
-      isTranscribing
+      isTranscribing,
+      error
     },
     dispatch
   ] = useReducer(reducer, {
@@ -136,18 +144,19 @@ const App = () => {
     translation: '',
     isTranscribing: false
   });
+
+  const credentialsRef = useRef();
+  const transcribeFieldRef = useRef(null);
+  const translateFieldRef = useRef(null);
   const classes = useStyles();
 
   const getCurrentCredentials = async () => {
     const {
       data: { Credentials }
     } = await Auth.currentCredentials();
-    setKey(Credentials.AccessKeyId);
-    setSecret(Credentials.SecretKey);
-    setSessionToken(Credentials.SessionToken);
-  };
 
-  //transcribeFieldRef.current.scrollTop = transcribeFieldRef.current.scrollHeight;
+    credentialsRef.current = Credentials;
+  };
 
   useEffect(() => {
     //transcribeFieldRef.current.scrollTop = transcribeFieldRef.current.scrollHeight;
@@ -162,7 +171,7 @@ const App = () => {
     getCurrentCredentials();
   }, []);
 
-  let streamAudioToWebSocket = function(userMediaStream) {
+  let streamAudioToWebSocket = userMediaStream => {
     //let's get the mic input from the browser, via the microphone-stream module
     micStream = new mic();
     micStream.setStream(userMediaStream);
@@ -184,7 +193,6 @@ const App = () => {
         if (socket.OPEN) socket.send(binary);
       });
     };
-
     // handle messages, errors, and close events
     wireSocketEvents();
   };
@@ -196,9 +204,10 @@ const App = () => {
     else sampleRate = 8000;
   }
 
-  function wireSocketEvents() {
+  const wireSocketEvents = () => {
     // handle inbound messages from Amazon Transcribe
-    socket.onmessage = function(message) {
+    //console.log(destinationLanguage, speaker, enableSpeaker);
+    socket.onmessage = message => {
       //convert the binary event stream message to JSON
       let messageWrapper = eventStreamMarshaller.unmarshall(
         Buffer(message.data)
@@ -207,7 +216,8 @@ const App = () => {
         String.fromCharCode.apply(String, messageWrapper.body)
       );
       if (messageWrapper.headers[':message-type'].value === 'event') {
-        handleEventStreamMessage(messageBody, destinationLanguage, speaker);
+        //console.log(destinationLanguage, speaker, enableSpeaker);
+        handleEventStreamMessage(messageBody);
       } else {
         transcribeException = true;
         showError(messageBody.Message);
@@ -233,47 +243,18 @@ const App = () => {
         toggleStartStop();
       }
     };
-  }
-
-  const getTranslation = async (transcript, destinationLanguage) => {
-    const { text } = await Predictions.convert({
-      translateText: {
-        source: {
-          text: transcript,
-          language: 'en'
-          // language : "es" // defaults configured on aws-exports.js
-          // supported languages https://docs.aws.amazon.com/translate/latest/dg/how-it-works.html#how-it-works-language-codes
-        },
-        targetLanguage: destinationLanguage
-      }
-    });
-
-    return text;
   };
 
-  const handleEventStreamMessage = async (
-    messageJson,
-    destinationLanguage,
-    speaker
-  ) => {
+  const handleEventStreamMessage = async messageJson => {
     let results = messageJson.Transcript.Results;
-
     if (results.length > 0) {
       if (results[0].Alternatives.length > 0) {
         let transcript = results[0].Alternatives[0].Transcript;
 
-        //console.log(results);
-
         // fix encoding for accented characters
         transcript = decodeURIComponent(escape(transcript));
-
-        //const id = results[0].ResultId
         // update the textarea with the latest result
-
-        //const translate = await getTranslation(transcript);
-
-        console.log(transcript, 'Partial Results: ' + results[0].IsPartial);
-        console.log(destinationLanguage, speaker, enableSpeaker);
+        //console.log(transcript, 'Partial Results: ' + results[0].IsPartial);
 
         if (results[0].IsPartial) {
           dispatch({
@@ -281,35 +262,41 @@ const App = () => {
             payload: { transcript, resultId: results[0].ResultId }
           });
         }
-
         // if this transcript segment is final, add it to the overall transcription
         if (!results[0].IsPartial) {
           //scroll the textarea down
           //$('#transcript').scrollTop($('#transcript')[0].scrollHeight);
+
           const translate = await getTranslation(
             transcript,
-            destinationLanguage
+            destlan //substituting with global variable
+            //destinationLanguage
           );
+
           dispatch({
             type: 'final',
             payload: { transcript, translate, resultId: results[0].ResultId }
           });
 
-          if (enableSpeaker) {
-            generateTextToSpeech(translate, speaker);
+          if (eblspkr) {
+            //generateTextToSpeech(translate, speaker, audioCtx);
+            generateTextToSpeech(translate, spkr, audioCtx); // substituting spkr global variable
           }
 
-          //transcription += transcript + '\n';
-        }
+          // dispatch({
+          //   type: 'final',
+          //   payload: { transcript, translate, resultId: results[0].ResultId }
+          // });
 
+          // if (enableSpeaker) {
+          //   generateTextToSpeech(translate, speaker, audioCtx); // substituting spkr global variable
+          // }
+          // transcription += transcript + '\n';
+        }
         transcribeFieldRef.current.scrollTop =
           transcribeFieldRef.current.scrollHeight;
         translateFieldRef.current.scrollTop =
           translateFieldRef.current.scrollHeight;
-        //console.log(transcribeFieldRef.current.scrollHeight);
-
-        // .then(result => console.log(JSON.stringify(result, null, 2)))
-        // .catch(err => console.log(JSON.stringify(err, null, 2)));
       }
     }
   };
@@ -325,18 +312,6 @@ const App = () => {
       dispatch({ type: 'stop' });
     }
   };
-
-  function toggleStartStop(disableStart = false) {
-    // $('#start-button').prop('disabled', disableStart);
-    // $('#stop-button').attr("disabled", !disableStart);
-  }
-
-  function showError(message) {
-    // $('#error').html('<i class="fa fa-times-circle"></i> ' + message);
-    // $('#error').show();
-
-    console.log(message);
-  }
 
   function convertAudioToBinaryMessage(audioChunk) {
     let raw = mic.toRaw(audioChunk);
@@ -355,6 +330,29 @@ const App = () => {
 
     return binary;
   }
+
+  const handleStart = () => {
+    //$('#error').hide(); // hide any existing errors
+    //toggleStartStop(true); // disable start and enable stop button
+
+    dispatch({ type: 'start' });
+
+    // set the language and region from the dropdowns
+    setLanguage();
+    // first we get the microphone input from the browser (as a promise)...
+    window.navigator.mediaDevices
+      .getUserMedia({
+        video: false,
+        audio: true
+      })
+      // ...then we convert the mic stream to binary event stream messages when the promise resolves
+      .then(streamAudioToWebSocket)
+      .catch(err => {
+        showError(
+          'There was an error streaming your audio to Amazon Transcribe. Please try again.'
+        );
+      });
+  };
 
   function getAudioEventMessage(buffer) {
     // wrap the audio data in a JSON envelope
@@ -375,10 +373,9 @@ const App = () => {
 
   function createPresignedUrl() {
     const region = 'us-east-1';
+    const endpoint = 'transcribestreaming.' + region + '.amazonaws.com:8443';
+    const { AccessKeyId, SecretKey, SessionToken } = credentialsRef.current;
 
-    let endpoint = 'transcribestreaming.' + region + '.amazonaws.com:8443';
-
-    //    console.log(key, secret, sessionToken);
     // get a preauthenticated URL that we can use to establish our WebSocket
     return v4.createPresignedURL(
       'GET',
@@ -392,9 +389,9 @@ const App = () => {
       {
         //key: 'AKIAWYZDIV3SEICDUSMV',
         //secret: '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',
-        key,
-        secret,
-        sessionToken,
+        key: AccessKeyId,
+        secret: SecretKey,
+        sessionToken: SessionToken,
         protocol: 'wss',
         expires: 100,
         region: region,
@@ -407,28 +404,17 @@ const App = () => {
     );
   }
 
-  const handleStart = () => {
-    //$('#error').hide(); // hide any existing errors
-    //toggleStartStop(true); // disable start and enable stop button
+  function toggleStartStop(disableStart = false) {
+    // $('#start-button').prop('disabled', disableStart);
+    // $('#stop-button').attr("disabled", !disableStart);
+  }
 
-    // set the language and region from the dropdowns
-    setLanguage();
-
-    // first we get the microphone input from the browser (as a promise)...
-    window.navigator.mediaDevices
-      .getUserMedia({
-        video: false,
-        audio: true
-      })
-      // ...then we convert the mic stream to binary event stream messages when the promise resolves
-      .then(streamAudioToWebSocket)
-      .catch(function(error) {
-        showError(
-          'There was an error streaming your audio to Amazon Transcribe. Please try again.'
-        );
-        //toggleStartStop();
-      });
-  };
+  function showError(message) {
+    // $('#error').html('<i class="fa fa-times-circle"></i> ' + message);
+    // $('#error').show();
+    dispatch({ type: 'error', payload: message });
+    console.log(message);
+  }
 
   return (
     <div className="App">
@@ -493,11 +479,16 @@ const App = () => {
             >
               <NativeSelects
                 label={'Target'}
-                disabled={isTranscribing}
+                //disabled={isTranscribing}
                 //value={}
                 options={LANGUAGES}
                 value={destinationLanguage}
                 onChange={e => {
+                  spkr = LANGUAGES.find(f => f.languageCode === e.target.value)
+                    .speaker;
+
+                  destlan = e.target.value;
+
                   setSpeaker(
                     LANGUAGES.find(f => f.languageCode === e.target.value)
                       .speaker
@@ -512,13 +503,16 @@ const App = () => {
                 <FormControlLabel
                   control={
                     <Switch
-                      disabled={isTranscribing}
+                      //disabled={isTranscribing}
                       checked={enableSpeaker}
-                      onChange={() => setEnableSpeaker(!enableSpeaker)}
-                      color="default"
+                      onChange={() => {
+                        setEnableSpeaker(!enableSpeaker);
+                        eblspkr = !enableSpeaker;
+                      }}
+                      //color="default"
                     />
                   }
-                  label={enableSpeaker ? 'Enable Speech' : 'Disable Speech'}
+                  label="Speech"
                 />
               </FormGroup>
             </Grid>
@@ -559,17 +553,15 @@ const App = () => {
             } else {
               closeSocket();
             }
-            //setIsTranscribing(!isTranscribing);
-            isTranscribing
-              ? dispatch({ type: 'stop' })
-              : dispatch({ type: 'start' });
+
+            // isTranscribing
+            //   ? dispatch({ type: 'stop' })
+            //   : dispatch({ type: 'start' });
           }}
         >
           {isTranscribing ? <StopIcon /> : <MicIcon />}
         </Fab>
       </div>
-      {/* <TextToSpeech /> */}
-      {/* <TextToSpeech /> */}
     </div>
   );
 };

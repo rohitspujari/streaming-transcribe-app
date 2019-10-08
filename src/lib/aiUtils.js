@@ -2,7 +2,7 @@ import Amplify, { Storage, Predictions } from 'aws-amplify';
 import { AmazonAIPredictionsProvider } from '@aws-amplify/predictions';
 import React, { useState } from 'react';
 
-function generateTextToSpeech(text, speaker) {
+function generateTextToSpeech(text, speaker, audioCtx) {
   //setResponse('Generating audio...');
   Predictions.convert({
     textToSpeech: {
@@ -15,9 +15,11 @@ function generateTextToSpeech(text, speaker) {
     }
   })
     .then(result => {
-      let AudioContext = window.AudioContext || window.webkitAudioContext;
-      //console.log({ AudioContext });
-      const audioCtx = new AudioContext();
+      // let AudioContext = window.AudioContext || window.webkitAudioContext;
+
+      // //console.log({ AudioContext });
+      // const audioCtx = new AudioContext();
+      if (!audioCtx) console.log(window);
       const source = audioCtx.createBufferSource();
       audioCtx.decodeAudioData(
         result.audioStream,
@@ -34,4 +36,20 @@ function generateTextToSpeech(text, speaker) {
     .catch(err => console.log(err));
 }
 
-export default generateTextToSpeech;
+const getTranslation = async (transcript, destinationLanguage) => {
+  const { text } = await Predictions.convert({
+    translateText: {
+      source: {
+        text: transcript,
+        language: 'en'
+        // language : "es" // defaults configured on aws-exports.js
+        // supported languages https://docs.aws.amazon.com/translate/latest/dg/how-it-works.html#how-it-works-language-codes
+      },
+      targetLanguage: destinationLanguage
+    }
+  });
+
+  return text;
+};
+
+export { getTranslation, generateTextToSpeech };

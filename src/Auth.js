@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useReducer, createContext } from 'react';
 import awsconfig from './aws-exports';
 import Amplify, { Auth, Hub } from 'aws-amplify';
-import Header from './Header';
+import Header from './components/Header';
 
 import {
   TextField,
