@@ -1,7 +1,8 @@
-import React, { useState, useContext, useEffect, useReducer } from 'react';
+import React, { useState, useEffect, useReducer, useRef } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import LinearProgress from '@material-ui/core/LinearProgress';
+import { FormControlLabel, FormGroup, LinearProgress } from '@material-ui/core';
+import Switch from '@material-ui/core/Switch';
 
 import { useAuth, AuthUI, withAuth, UserContext } from './Auth';
 import { Auth } from 'aws-amplify';
@@ -10,8 +11,6 @@ import Predictions, {
 } from '@aws-amplify/predictions';
 
 import Amplify from 'aws-amplify';
-// Get the aws resources configuration parameters
-import awsconfig from './aws-exports'; // if you are using Amplify CLI
 
 import * as audioUtils from './lib/audioUtils'; // for encoding audio data as PCM
 import crypto from 'crypto'; // tot sign our pre-signed URL
@@ -27,17 +26,27 @@ import NativeSelects from './NativeSelects';
 
 // our converter between binary event streams messages and JSON
 Amplify.addPluggable(new AmazonAIPredictionsProvider());
+
+const LANGUAGES = [
+  { language: 'Hindi', languageCode: 'hi', speaker: 'Aditi' },
+  { language: 'German', languageCode: 'de', speaker: 'Hans' },
+  { language: 'Korean', languageCode: 'ko', speaker: 'Seoyeon' },
+  { language: 'Italian', languageCode: 'it', speaker: 'Carla' },
+  { language: 'Arabic', languageCode: 'ar', speaker: 'Zeina' },
+  { language: 'Chinese', languageCode: 'zh', speaker: 'Zhiyu' },
+  { language: 'French', languageCode: 'fr', speaker: 'Celine' },
+  { language: 'Polish', languageCode: 'pl', speaker: 'Ewa' },
+  { language: 'Russian', languageCode: 'ru', speaker: 'Tatyana' },
+  { language: 'Spanish', languageCode: 'es', speaker: 'Conchita' }
+];
 const eventStreamMarshaller = new EventStreamMarshaller(
   util_utf8_node.toUtf8,
   util_utf8_node.fromUtf8
 );
 
-//const key = 'AKIAWYZDIV3SEICDUSMV';
-//const secret = '5/AXIWIhodNO5lF2c5Vegj4LoHB7aCiVvP8BPeI2';
-
 // our global variables for managing state
 let languageCode;
-let region;
+//let region;
 let sampleRate;
 //let transcription = '';
 let socket;
@@ -50,10 +59,7 @@ const useStyles = makeStyles(theme => ({
     display: 'flex',
     padding: 10
   },
-
   input: {
-    //display: 'flex',
-    //textAlign: 'justify',
     alignItems: 'flex-start',
     height: window.innerHeight / 6
   },
@@ -101,6 +107,12 @@ const App = () => {
   const [secret, setSecret] = useState();
   const [sessionToken, setSessionToken] = useState();
   const [destinationLanguage, setDestinationLanguage] = useState('hi');
+  const [speaker, setSpeaker] = useState('Aditi');
+  const [enableSpeaker, setEnableSpeaker] = useState(true);
+
+  const transcribeFieldRef = useRef(null);
+  const translateFieldRef = useRef(null);
+
   //const [isTranscribing, setIsTranscribing] = useState(false);
   const [
     {
@@ -129,13 +141,15 @@ const App = () => {
     setSessionToken(Credentials.SessionToken);
   };
 
+  //transcribeFieldRef.current.scrollTop = transcribeFieldRef.current.scrollHeight;
+
   useEffect(() => {
+    //transcribeFieldRef.current.scrollTop = transcribeFieldRef.current.scrollHeight;
     if (!window.navigator.mediaDevices.getUserMedia) {
       // Use our helper method to show an error on the page
       showError(
         'We support the latest versions of Chrome, Firefox, Safari, and Edge. Update your browser and try your request again.'
       );
-
       // maintain enabled/distabled state for the start and stop buttons
       toggleStartStop();
     }
@@ -176,14 +190,6 @@ const App = () => {
     else sampleRate = 8000;
   }
 
-  function setRegion() {
-    region = 'us-east-1';
-
-    // region = $('#region')
-    //   .find(':selected')
-    //   .val();
-  }
-
   function wireSocketEvents() {
     // handle inbound messages from Amazon Transcribe
     socket.onmessage = function(message) {
@@ -195,7 +201,7 @@ const App = () => {
         String.fromCharCode.apply(String, messageWrapper.body)
       );
       if (messageWrapper.headers[':message-type'].value === 'event') {
-        handleEventStreamMessage(messageBody);
+        handleEventStreamMessage(messageBody, destinationLanguage, speaker);
       } else {
         transcribeException = true;
         showError(messageBody.Message);
@@ -223,7 +229,7 @@ const App = () => {
     };
   }
 
-  const getTranslation = async transcript => {
+  const getTranslation = async (transcript, destinationLanguage) => {
     const { text } = await Predictions.convert({
       translateText: {
         source: {
@@ -235,10 +241,15 @@ const App = () => {
         targetLanguage: destinationLanguage
       }
     });
+
     return text;
   };
 
-  const handleEventStreamMessage = async messageJson => {
+  const handleEventStreamMessage = async (
+    messageJson,
+    destinationLanguage,
+    speaker
+  ) => {
     let results = messageJson.Transcript.Results;
 
     if (results.length > 0) {
@@ -252,19 +263,13 @@ const App = () => {
 
         //const id = results[0].ResultId
         // update the textarea with the latest result
-        //$('#transcript').val(transcription + transcript + "\n");
-        //console.log(transcription + transcript + '\n');
-        //const translate = '';
 
         //const translate = await getTranslation(transcript);
 
         console.log(transcript, 'Partial Results: ' + results[0].IsPartial);
+        console.log(destinationLanguage, speaker, enableSpeaker);
 
         if (results[0].IsPartial) {
-          // if (results[0].ResultId === resultId && isPartial === false) {
-          //   return;
-          // }
-
           dispatch({
             type: 'partial',
             payload: { transcript, resultId: results[0].ResultId }
@@ -275,14 +280,27 @@ const App = () => {
         if (!results[0].IsPartial) {
           //scroll the textarea down
           //$('#transcript').scrollTop($('#transcript')[0].scrollHeight);
-          const translate = await getTranslation(transcript);
+          const translate = await getTranslation(
+            transcript,
+            destinationLanguage
+          );
           dispatch({
             type: 'final',
             payload: { transcript, translate, resultId: results[0].ResultId }
           });
-          generateTextToSpeech(translate);
+
+          if (enableSpeaker) {
+            generateTextToSpeech(translate, speaker);
+          }
+
           //transcription += transcript + '\n';
         }
+
+        transcribeFieldRef.current.scrollTop =
+          transcribeFieldRef.current.scrollHeight;
+        translateFieldRef.current.scrollTop =
+          translateFieldRef.current.scrollHeight;
+        //console.log(transcribeFieldRef.current.scrollHeight);
 
         // .then(result => console.log(JSON.stringify(result, null, 2)))
         // .catch(err => console.log(JSON.stringify(err, null, 2)));
@@ -350,6 +368,8 @@ const App = () => {
   }
 
   function createPresignedUrl() {
+    const region = 'us-east-1';
+
     let endpoint = 'transcribestreaming.' + region + '.amazonaws.com:8443';
 
     //    console.log(key, secret, sessionToken);
@@ -387,7 +407,6 @@ const App = () => {
 
     // set the language and region from the dropdowns
     setLanguage();
-    setRegion();
 
     // first we get the microphone input from the browser (as a promise)...
     window.navigator.mediaDevices
@@ -409,18 +428,21 @@ const App = () => {
     <div className="App">
       <Grid container spacing={1} className={classes.container}>
         <Grid item xs={12} sm={6}>
-          {/* <NativeSelects
+          <NativeSelects
             label={'Source'}
-            options={[{ text: 'English', value: 'en' }]}
+            options={[{ language: 'English', languageCode: 'en' }]}
             disabled
             value={'en'}
-          /> */}
+          />
           <TextField
             //style={{ padding: 10 }}
             //className={classes.textBox}
             //flex
+
+            //wrap="nowrap"
             variant="outlined"
             fullWidth
+            inputRef={transcribeFieldRef}
             value={
               isPartial
                 ? transcription + partialTranscript + '\n'
@@ -429,7 +451,7 @@ const App = () => {
             margin="normal"
             label="Transcription"
             multiline
-            rowsMax="8"
+            rowsMax="5"
             InputProps={{
               className: classes.input
             }}
@@ -439,26 +461,66 @@ const App = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <NativeSelects
-            label={'Target'}
-            //value={}
-            options={[
-              { text: 'Hindi', value: 'hi' },
-              { text: 'German', value: 'de' }
-            ]}
-            value={destinationLanguage}
-            onChange={e => setDestinationLanguage(e.target.value)}
-          />
+          <Grid
+            container
+            spacing={2}
+            alignItems="center"
+            //justify="space-between"
+          >
+            <Grid
+              style={
+                {
+                  // backgroundColor: 'red'
+                }
+              }
+              item
+              xs={6}
+            >
+              <NativeSelects
+                label={'Target'}
+                disabled={isTranscribing}
+                //value={}
+                options={LANGUAGES}
+                value={destinationLanguage}
+                onChange={e => {
+                  setSpeaker(
+                    LANGUAGES.find(f => f.languageCode === e.target.value)
+                      .speaker
+                  );
+
+                  setDestinationLanguage(e.target.value);
+                }}
+              />
+            </Grid>
+            <Grid item xs={6} container justify="flex-end">
+              <FormGroup row>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      disabled={isTranscribing}
+                      checked={enableSpeaker}
+                      onChange={() => setEnableSpeaker(!enableSpeaker)}
+                      color="default"
+                    />
+                  }
+                  label={
+                    enableSpeaker ? 'Playback Enabled' : 'Playback Disabled'
+                  }
+                />
+              </FormGroup>
+            </Grid>
+          </Grid>
           <TextField
             //className={classes.textBox}
             //flex
             variant="outlined"
+            inputRef={translateFieldRef}
             fullWidth
             value={translation}
             margin="normal"
             label="Translation"
             multiline
-            rowsMax="8"
+            rowsMax="5"
             InputProps={{
               className: classes.input
             }}

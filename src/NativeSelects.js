@@ -6,8 +6,8 @@ import Select from '@material-ui/core/Select';
 
 const useStyles = makeStyles(theme => ({
   root: {
-    display: 'flex',
-    flexWrap: 'wrap'
+    display: 'flex'
+    //flexWrap: 'wrap'
   },
   formControl: {
     //margin: theme.spacing(1),
@@ -33,7 +33,7 @@ export default function NativeSelects({
   const inputLabel = React.useRef(null);
   const [labelWidth, setLabelWidth] = React.useState(0);
   React.useEffect(() => {
-    setLabelWidth(inputLabel.current.offsetWidth);
+    // setLabelWidth(inputLabel.current.offsetWidth);
   }, []);
 
   const handleChange = name => event => {
@@ -46,7 +46,7 @@ export default function NativeSelects({
   return (
     <div className={classes.root}>
       <FormControl variant="outlined" className={classes.formControl}>
-        <InputLabel ref={inputLabel}>{label}</InputLabel>
+        {/* <InputLabel ref={inputLabel}>{label}</InputLabel> */}
         <Select
           disabled={disabled}
           native
@@ -55,8 +55,8 @@ export default function NativeSelects({
           labelWidth={labelWidth}
         >
           {options.map(o => (
-            <option key={o.value} value={o.value}>
-              {o.text}
+            <option key={o.languageCode} value={o.languageCode}>
+              {o.language}
             </option>
           ))}
         </Select>
