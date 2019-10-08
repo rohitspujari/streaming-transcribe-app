@@ -72,7 +72,7 @@ const useStyles = makeStyles(theme => ({
   },
   input: {
     alignItems: 'flex-start',
-    height: window.innerHeight / 6
+    height: window.innerHeight / 3
   },
   linearProgress: {
     flexGrow: 1
@@ -452,7 +452,7 @@ const App = () => {
             margin="normal"
             label="Transcription"
             multiline
-            rowsMax="5"
+            rowsMax="10"
             InputProps={{
               className: classes.input
             }}
@@ -527,7 +527,7 @@ const App = () => {
             margin="normal"
             label="Translation"
             multiline
-            rowsMax="5"
+            rowsMax="10"
             InputProps={{
               className: classes.input
             }}
@@ -561,6 +561,9 @@ const App = () => {
         >
           {isTranscribing ? <StopIcon /> : <MicIcon />}
         </Fab>
+        <Typography style={{ marginTop: 10 }}>
+          {isTranscribing ? 'Tap to Stop' : 'Tap to Speak'}
+        </Typography>
       </div>
     </div>
   );
