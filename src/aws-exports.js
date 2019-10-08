@@ -2,12 +2,12 @@
 
 const awsmobile = {
     "aws_project_region": "us-east-1",
-    "aws_cognito_identity_pool_id": "us-east-1:afedd062-1c8e-42f9-ad6b-0a5d957c50f9",
+    "aws_cognito_identity_pool_id": "us-east-1:9064a4ae-f265-421b-a97a-2183cf6d5a4f",
     "aws_cognito_region": "us-east-1",
-    "aws_user_pools_id": "us-east-1_MQZ44876Q",
-    "aws_user_pools_web_client_id": "2l2ccc4dbm1ggsa66644f5gc0v",
+    "aws_user_pools_id": "us-east-1_5UjfXmP6j",
+    "aws_user_pools_web_client_id": "3qv6s6ij0i5kk1bftlo0a029d8",
     "oauth": {
-        "domain": "streamingtranscribea5a6160bf-5a6160bf-prod.auth.us-east-1.amazoncognito.com",
+        "domain": "streamingtranscribea5a6160bf-5a6160bf-master.auth.us-east-1.amazoncognito.com",
         "scope": [
             "phone",
             "email",
@@ -15,8 +15,8 @@ const awsmobile = {
             "profile",
             "aws.cognito.signin.user.admin"
         ],
-        "redirectSignIn": "https://speakintongues.sonasher.com/,https://speakintongues.sonasher.com/",
-        "redirectSignOut": "https://speakintongues.sonasher.com/",
+        "redirectSignIn": "http://localhost:3000/",
+        "redirectSignOut": "http://localhost:3000/",
         "responseType": "code"
     },
     "federationTarget": "COGNITO_USER_POOLS",

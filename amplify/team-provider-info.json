@@ -18,16 +18,16 @@
             }
         }
     },
-    "prod": {
+    "master": {
         "awscloudformation": {
-            "AuthRoleName": "streamingtranscribea-prod-20191008130829-authRole",
-            "UnauthRoleArn": "arn:aws:iam::465541050084:role/streamingtranscribea-prod-20191008130829-unauthRole",
-            "AuthRoleArn": "arn:aws:iam::465541050084:role/streamingtranscribea-prod-20191008130829-authRole",
+            "AuthRoleName": "streamingtranscribea-master-20191001193448-authRole",
+            "UnauthRoleArn": "arn:aws:iam::465541050084:role/streamingtranscribea-master-20191001193448-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::465541050084:role/streamingtranscribea-master-20191001193448-authRole",
             "Region": "us-east-1",
-            "DeploymentBucketName": "streamingtranscribea-prod-20191008130829-deployment",
-            "UnauthRoleName": "streamingtranscribea-prod-20191008130829-unauthRole",
-            "StackName": "streamingtranscribea-prod-20191008130829",
-            "StackId": "arn:aws:cloudformation:us-east-1:465541050084:stack/streamingtranscribea-prod-20191008130829/a1e84050-e9f6-11e9-9564-0af77bd56d08"
+            "DeploymentBucketName": "streamingtranscribea-master-20191008170637-deployment",
+            "UnauthRoleName": "streamingtranscribea-master-20191001193448-unauthRole",
+            "StackName": "streamingtranscribea-master-20191008170637",
+            "StackId": "arn:aws:cloudformation:us-east-1:465541050084:stack/streamingtranscribea-master-20191008170637/e6681900-ea17-11e9-ab4b-0a6fb8e9c8ee"
         },
         "categories": {
             "auth": {
