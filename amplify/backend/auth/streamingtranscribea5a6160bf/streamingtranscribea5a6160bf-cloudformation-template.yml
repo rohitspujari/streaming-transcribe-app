@@ -94,16 +94,16 @@ Parameters:
       
   hostedUIProviderMeta:
     Type: String
-              
+                      
+  dependsOn:
+    Type: CommaDelimitedList
+      
   hostedUIProviderCreds:
     Type: String
               
   oAuthMetadata:
     Type: String
-                      
-  dependsOn:
-    Type: CommaDelimitedList
-    
+            
 Conditions:
   ShouldNotCreateEnvResources: !Equals [ !Ref env, NONE ]
 

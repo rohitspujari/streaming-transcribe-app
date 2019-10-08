@@ -40,7 +40,7 @@ export default function Header() {
       <AppBar position="static">
         <Toolbar>
           {/* <Avatar src={pictureSrc} className={classes.avatar} /> */}
-          <Typography className={classes.title}>Speaking in Tounges</Typography>
+          <Typography className={classes.title}>Speak in Tounges</Typography>
           <Tooltip title={displayName}>
             {user.attributes.picture ? (
               <Avatar src={pictureSrc} className={classes.avatar} />
