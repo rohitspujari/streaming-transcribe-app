@@ -452,7 +452,7 @@ const App = () => {
             margin="normal"
             label="Transcription"
             multiline
-            rowsMax="8"
+            rowsMax="7"
             InputProps={{
               className: classes.input,
               readOnly: true
@@ -529,7 +529,7 @@ const App = () => {
             margin="normal"
             label="Translation"
             multiline
-            rowsMax="8"
+            rowsMax="7"
             InputProps={{
               className: classes.input,
               readOnly: true
