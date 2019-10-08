@@ -17,5 +17,24 @@
                 }
             }
         }
+    },
+    "prod": {
+        "awscloudformation": {
+            "AuthRoleName": "streamingtranscribea-prod-20191008130829-authRole",
+            "UnauthRoleArn": "arn:aws:iam::465541050084:role/streamingtranscribea-prod-20191008130829-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::465541050084:role/streamingtranscribea-prod-20191008130829-authRole",
+            "Region": "us-east-1",
+            "DeploymentBucketName": "streamingtranscribea-prod-20191008130829-deployment",
+            "UnauthRoleName": "streamingtranscribea-prod-20191008130829-unauthRole",
+            "StackName": "streamingtranscribea-prod-20191008130829",
+            "StackId": "arn:aws:cloudformation:us-east-1:465541050084:stack/streamingtranscribea-prod-20191008130829/a1e84050-e9f6-11e9-9564-0af77bd56d08"
+        },
+        "categories": {
+            "auth": {
+                "streamingtranscribea5a6160bf": {
+                    "hostedUIProviderCreds": "[{\"ProviderName\":\"Facebook\",\"client_id\":\"133718410632322\",\"client_secret\":\"f7679db02ec14e8abf0202f090e24a5c\"},{\"ProviderName\":\"Google\",\"client_id\":\"277830869306-2c0r1esgjnjauug9koe5sodvh97uv419.apps.googleusercontent.com\",\"client_secret\":\"jjm4dJ8qHJN1BxJ9ZKYbvYia\"}]"
+                }
+            }
+        }
     }
 }
