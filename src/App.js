@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useReducer, useRef } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { FormControlLabel, FormGroup, LinearProgress } from '@material-ui/core';
+import {
+  FormControlLabel,
+  FormGroup,
+  LinearProgress,
+  Typography
+} from '@material-ui/core';
 import Switch from '@material-ui/core/Switch';
 
 import { useAuth, AuthUI, withAuth, UserContext } from './Auth';
@@ -57,7 +62,8 @@ let transcribeException = false;
 const useStyles = makeStyles(theme => ({
   container: {
     display: 'flex',
-    padding: 10
+    padding: 10,
+    marginTop: 10
   },
   input: {
     alignItems: 'flex-start',
@@ -427,6 +433,15 @@ const App = () => {
   return (
     <div className="App">
       <Grid container spacing={1} className={classes.container}>
+        {/* <Grid item xs={12} container justify="flex-start">
+          <Typography
+            style={{ marginTop: 20, marginBottom: 20 }}
+            variant="h6"
+            gutterBottom
+          >
+            Speaking in Tounges
+          </Typography>
+        </Grid> */}
         <Grid item xs={12} sm={6}>
           <NativeSelects
             label={'Source'}
@@ -503,9 +518,7 @@ const App = () => {
                       color="default"
                     />
                   }
-                  label={
-                    enableSpeaker ? 'Playback Enabled' : 'Playback Disabled'
-                  }
+                  label={enableSpeaker ? 'Enable Speech' : 'Disable Speech'}
                 />
               </FormGroup>
             </Grid>
