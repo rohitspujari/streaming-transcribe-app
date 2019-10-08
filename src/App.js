@@ -72,7 +72,7 @@ const useStyles = makeStyles(theme => ({
   },
   input: {
     alignItems: 'flex-start',
-    height: window.innerHeight / 3
+    height: window.innerHeight / 4.5
   },
   linearProgress: {
     flexGrow: 1
@@ -439,7 +439,7 @@ const App = () => {
             //style={{ padding: 10 }}
             //className={classes.textBox}
             //flex
-
+            //disabled
             //wrap="nowrap"
             variant="outlined"
             fullWidth
@@ -452,9 +452,10 @@ const App = () => {
             margin="normal"
             label="Transcription"
             multiline
-            rowsMax="10"
+            rowsMax="8"
             InputProps={{
-              className: classes.input
+              className: classes.input,
+              readOnly: true
             }}
             InputLabelProps={{
               shrink: true
@@ -520,6 +521,7 @@ const App = () => {
           <TextField
             //className={classes.textBox}
             //flex
+            //disabled
             variant="outlined"
             inputRef={translateFieldRef}
             fullWidth
@@ -527,9 +529,10 @@ const App = () => {
             margin="normal"
             label="Translation"
             multiline
-            rowsMax="10"
+            rowsMax="8"
             InputProps={{
-              className: classes.input
+              className: classes.input,
+              readOnly: true
             }}
             InputLabelProps={{
               shrink: true
