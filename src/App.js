@@ -4,8 +4,7 @@ import {
   FormControlLabel,
   FormGroup,
   LinearProgress,
-  Typography,
-  Box
+  Typography
 } from '@material-ui/core';
 import Switch from '@material-ui/core/Switch';
 
