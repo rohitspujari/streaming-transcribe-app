@@ -21,14 +21,22 @@ import { useTheme } from '@material-ui/core/styles';
 
 Amplify.configure(awsconfig);
 
-const oauth = {
-  ...Auth._config.oauth,
-  redirectSignIn: window.location.origin + '/',
-  redirectSignOut: window.location.origin + '/'
-};
-Auth.configure({ oauth });
-
-console.log(oauth);
+// console.log(Auth);
+// const oauth = {
+//   domain: Auth._config.oauth.domain,
+//   scope: [
+//     'phone',
+//     'email',
+//     'profile',
+//     'openid',
+//     'aws.cognito.signin.user.admin'
+//   ],
+//   redirectSignIn: 'http://localhost:3000/',
+//   redirectSignOut: 'http://localhost:3000/',
+//   responseType: 'code' // or 'token', note that REFRESH token will only be generated when the responseType is code
+// };
+// Auth.configure({ oauth });
+// console.log(Auth);
 
 const UserContext = createContext('null');
 
