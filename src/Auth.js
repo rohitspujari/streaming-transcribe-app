@@ -20,12 +20,6 @@ import { useTheme } from '@material-ui/core/styles';
 //console.log(window.location.origin);
 
 Amplify.configure(awsconfig);
-Auth.configure({
-  auth0: {
-    redirectUri: window.location.origin + '/', // 'your call back url',
-    returnTo: window.location.origin + '/' // 'your sign out url'
-  }
-});
 
 //console.log(Auth);
 
