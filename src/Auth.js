@@ -17,7 +17,18 @@ import {
 import { makeStyles } from '@material-ui/core/styles';
 import { useTheme } from '@material-ui/core/styles';
 
+//console.log(window.location.origin);
+
 Amplify.configure(awsconfig);
+Auth.configure({
+  auth0: {
+    redirectUri: window.location.origin, // 'your call back url',
+    returnTo: window.location.origin // 'your sign out url'
+  }
+});
+
+//const ENV = JSON.parse(localEnvInfo).envName;
+console.log(Auth);
 
 const UserContext = createContext('null');
 
