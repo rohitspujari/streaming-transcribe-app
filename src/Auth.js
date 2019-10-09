@@ -18,15 +18,16 @@ import { makeStyles } from '@material-ui/core/styles';
 import { useTheme } from '@material-ui/core/styles';
 
 //console.log(window.location.origin);
+
+Amplify.configure(awsconfig);
 const oauth = {
+  ...Auth._config.oauth,
   redirectSignIn: window.location.origin + '/',
   redirectSignOut: window.location.origin + '/'
 };
-
-Amplify.configure(awsconfig);
 Auth.configure({ oauth });
 
-//console.log(Auth);
+console.log(Auth);
 
 const UserContext = createContext('null');
 
