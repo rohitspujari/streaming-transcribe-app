@@ -20,6 +20,7 @@ import { useTheme } from '@material-ui/core/styles';
 //console.log(window.location.origin);
 
 Amplify.configure(awsconfig);
+
 const oauth = {
   ...Auth._config.oauth,
   redirectSignIn: window.location.origin + '/',
@@ -27,7 +28,7 @@ const oauth = {
 };
 Auth.configure({ oauth });
 
-console.log(Auth);
+console.log(oauth);
 
 const UserContext = createContext('null');
 
