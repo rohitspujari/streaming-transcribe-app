@@ -25,8 +25,13 @@ import mic from 'microphone-stream'; // collect microphone input as a stream of 
 import { TextField, Grid, makeStyles, Button, Fab } from '@material-ui/core';
 import MicIcon from '@material-ui/icons/Mic';
 import StopIcon from '@material-ui/icons/Stop';
-import { generateTextToSpeech, getTranslation } from './lib/aiUtils';
+import {
+  generateTextToSpeech,
+  getTranslation,
+  comprehendText
+} from './lib/aiUtils';
 import NativeSelects from './components/NativeSelects';
+import InteractiveList from './components/InteractiveList';
 
 // our converter between binary event streams messages and JSON
 Amplify.addPluggable(new AmazonAIPredictionsProvider());
@@ -75,6 +80,9 @@ const useStyles = makeStyles(theme => ({
   },
   linearProgress: {
     flexGrow: 1
+  },
+  root: {
+    flexGrow: 1
   }
 }));
 
@@ -88,7 +96,27 @@ const reducer = (state, action) => {
         resultId: action.payload.resultId,
         isPartial: false,
         partialTranscript: '',
-        partialTranslate: ''
+        partialTranslate: '',
+        translatedArray: getArray(
+          state.translatedArray,
+          action.payload.translate,
+          action.payload.sentiment,
+          false
+        ),
+        array: getArray(
+          state.array,
+          action.payload.transcript,
+          action.payload.sentiment,
+          false
+        )
+        // array: [
+        //   ...state.array,
+        //   {
+        //     isPartial: false,
+        //     transcript: action.payload.transcript,
+        //     sentiment: action.payload.sentiment
+        //   }
+        // ]
       };
     case 'partial':
       return {
@@ -96,7 +124,8 @@ const reducer = (state, action) => {
         partialTranscript: action.payload.transcript,
         //partialTranslate: action.payload.translate,
         resultId: action.payload.resultId,
-        isPartial: true
+        isPartial: true,
+        array: getArray(state.array, action.payload.transcript, 'neutral', true)
       };
     case 'start':
       return { ...state, isTranscribing: true };
@@ -121,6 +150,51 @@ const reducer = (state, action) => {
   }
 };
 
+const getArray = (array, transcript, sentiment, isPartial) => {
+  //debugger;
+
+  // No items in the array
+  if (array.length === 0) {
+    return [
+      ...array,
+      {
+        isPartial,
+        transcript,
+        sentiment
+      }
+    ];
+  }
+
+  // If last item in the array has partial results
+  if (array[array.length - 1].isPartial === true) {
+    array[array.length - 1] = {
+      isPartial,
+      transcript,
+      sentiment
+    };
+    return array;
+  } else {
+    //If the last item in the array doesn't have partial results
+    return [
+      ...array,
+      {
+        isPartial,
+        transcript,
+        sentiment: sentiment
+      }
+    ];
+  }
+
+  // return [
+  //   ...array,
+  //   {
+  //     isPartial: true,
+  //     transcript,
+  //     sentiment: 'NEUTRAL'
+  //   }
+  // ];
+};
+
 const App = () => {
   const [destinationLanguage, setDestinationLanguage] = useState('hi');
   const [speaker, setSpeaker] = useState('Aditi');
@@ -135,13 +209,17 @@ const App = () => {
       isPartial,
       resultId,
       isTranscribing,
-      error
+      error,
+      array,
+      translatedArray
     },
     dispatch
   ] = useReducer(reducer, {
     transcription: '',
     translation: '',
-    isTranscribing: false
+    isTranscribing: false,
+    array: [],
+    translatedArray: []
   });
 
   const credentialsRef = useRef();
@@ -272,9 +350,21 @@ const App = () => {
             //destinationLanguage
           );
 
+          const {
+            textInterpretation: {
+              sentiment: { predominant: sentiment }
+            }
+          } = await comprehendText(transcript);
+          console.log(sentiment);
+
           dispatch({
             type: 'final',
-            payload: { transcript, translate, resultId: results[0].ResultId }
+            payload: {
+              transcript,
+              sentiment: sentiment.toLowerCase(),
+              translate,
+              resultId: results[0].ResultId
+            }
           });
 
           if (eblspkr) {
@@ -427,14 +517,39 @@ const App = () => {
             Speaking in Tounges
           </Typography>
         </Grid> */}
-        <Grid item xs={12} sm={6}>
+        <Grid
+          item
+          style={{
+            height: window.innerHeight / 3
+            //borderStyle: 'solid'
+          }}
+          xs={12}
+          sm={6}
+        >
           <NativeSelects
+            style={{ marginTop: 20 }}
             label={'Source'}
             options={[{ language: 'English', languageCode: 'en' }]}
             disabled
             value={'en'}
           />
-          <TextField
+          <Grid
+            container
+            ref={transcribeFieldRef}
+            style={{
+              marginTop: 10,
+              borderStyle: 'solid',
+              borderWidth: 'thin',
+              borderRadius: 5,
+              overflow: 'auto',
+              height: '75%',
+              borderColor: '#808080a1'
+            }}
+            className={classes.root}
+          >
+            <InteractiveList data={array} />
+          </Grid>
+          {/* <TextField
             //style={{ padding: 10 }}
             //className={classes.textBox}
             //flex
@@ -459,9 +574,18 @@ const App = () => {
             InputLabelProps={{
               shrink: true
             }}
-          />
+          /> */}
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          style={{
+            height: window.innerHeight / 3
+            //borderColor: 'red'
+            // borderStyle: 'solid'
+          }}
+        >
           <Grid
             container
             spacing={2}
@@ -517,7 +641,23 @@ const App = () => {
               </FormGroup>
             </Grid>
           </Grid>
-          <TextField
+          <Grid
+            container
+            ref={translateFieldRef}
+            style={{
+              marginTop: 10,
+              borderStyle: 'solid',
+              borderWidth: 'thin',
+              borderRadius: 5,
+              overflow: 'auto',
+              height: '75%',
+              borderColor: '#808080a1'
+            }}
+            className={classes.root}
+          >
+            <InteractiveList data={translatedArray} />
+          </Grid>
+          {/* <TextField
             //className={classes.textBox}
             //flex
             //disabled
@@ -536,7 +676,7 @@ const App = () => {
             InputLabelProps={{
               shrink: true
             }}
-          />
+          /> */}
         </Grid>
         <Grid item xs={12}>
           <LinearProgress

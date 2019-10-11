@@ -36,6 +36,19 @@ function generateTextToSpeech(text, speaker, audioCtx) {
     .catch(err => console.log(err));
 }
 
+const comprehendText = async textToInterpret => {
+  const result = Predictions.interpret({
+    text: {
+      source: {
+        text: textToInterpret
+      },
+      type: 'ALL'
+    }
+  });
+
+  return result;
+};
+
 const getTranslation = async (transcript, destinationLanguage) => {
   const { text } = await Predictions.convert({
     translateText: {
@@ -52,4 +65,4 @@ const getTranslation = async (transcript, destinationLanguage) => {
   return text;
 };
 
-export { getTranslation, generateTextToSpeech };
+export { getTranslation, generateTextToSpeech, comprehendText };

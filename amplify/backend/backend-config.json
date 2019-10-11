@@ -1,21 +1,26 @@
 {
-    "auth": {
-        "streamingtranscribea5a6160bf": {
-            "service": "Cognito",
-            "providerPlugin": "awscloudformation",
-            "dependsOn": []
-        }
-    },
-    "predictions": {
-        "translateTexta476a6ba": {
-            "providerPlugin": "awscloudformation",
-            "service": "Translate",
-            "convertType": "translateText"
-        },
-        "speechGenerator439796d7": {
-            "providerPlugin": "awscloudformation",
-            "service": "Polly",
-            "convertType": "speechGenerator"
-        }
-    }
+	"auth": {
+		"streamingtranscribea5a6160bf": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": []
+		}
+	},
+	"predictions": {
+		"translateTexta476a6ba": {
+			"providerPlugin": "awscloudformation",
+			"service": "Translate",
+			"convertType": "translateText"
+		},
+		"speechGenerator439796d7": {
+			"providerPlugin": "awscloudformation",
+			"service": "Polly",
+			"convertType": "speechGenerator"
+		},
+		"interpretText7121dd5f": {
+			"providerPlugin": "awscloudformation",
+			"service": "Comprehend",
+			"interpretType": "interpretText"
+		}
+	}
 }
