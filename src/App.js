@@ -67,7 +67,7 @@ const useStyles = makeStyles(theme => ({
   container: {
     display: 'flex',
     padding: 10,
-    marginTop: 10
+    marginTop: 5
   },
   input: {
     alignItems: 'flex-start',
