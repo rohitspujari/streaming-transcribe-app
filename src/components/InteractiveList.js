@@ -65,16 +65,6 @@ export default function InteractiveList({ data, style }) {
   //   ];
   const classes = useStyles();
   const ref = useRef();
-
-  //   useEffect(() => {
-  //     if (ref.current) ref.current.scrollIntoView({ behavior: 'smooth' });
-  //   });
-
-  //if (ref.current) ref.current.scrollIntoView({ behavior: 'smooth' });
-
-  const scrollDown = () => {
-    ref.current.scrollIntoView({ behavior: 'smooth' });
-  };
   return (
     <Grid className={classes.demo} container>
       <Grid className={classes.root} item xs={12} md={12}>
@@ -82,8 +72,9 @@ export default function InteractiveList({ data, style }) {
 
         //dense={true}
         >
-          {data.map(({ transcript, sentiment }) => (
+          {data.map(({ transcript, sentiment }, i) => (
             <ListItem
+              key={i}
               classes={{
                 root: classes.listItemRoot
               }}

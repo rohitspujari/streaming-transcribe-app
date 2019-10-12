@@ -7,15 +7,12 @@ import {
   Typography
 } from '@material-ui/core';
 import Switch from '@material-ui/core/Switch';
-
 import { useAuth, AuthUI, withAuth, UserContext } from './Auth';
 import { Auth } from 'aws-amplify';
 import Predictions, {
   AmazonAIPredictionsProvider
 } from '@aws-amplify/predictions';
-
 import Amplify from 'aws-amplify';
-
 import * as audioUtils from './lib/audioUtils'; // for encoding audio data as PCM
 import crypto from 'crypto'; // tot sign our pre-signed URL
 import * as v4 from './lib/aws-signature-v4'; // to generate our pre-signed URL
@@ -48,14 +45,12 @@ const LANGUAGES = [
   { language: 'Russian', languageCode: 'ru', speaker: 'Tatyana' },
   { language: 'Spanish', languageCode: 'es', speaker: 'Conchita' }
 ];
-
 const eventStreamMarshaller = new EventStreamMarshaller(
   util_utf8_node.toUtf8,
   util_utf8_node.fromUtf8
 );
 
 // our global variables for managing state
-
 let destlan;
 let spkr;
 let eblspkr = true;
@@ -82,7 +77,8 @@ const useStyles = makeStyles(theme => ({
     flexGrow: 1
   },
   root: {
-    flexGrow: 1
+    flexGrow: 1,
+    display: 'flex'
   }
 }));
 
@@ -236,6 +232,13 @@ const App = () => {
   };
 
   useEffect(() => {
+    transcribeFieldRef.current.scrollTop =
+      transcribeFieldRef.current.scrollHeight;
+    translateFieldRef.current.scrollTop =
+      translateFieldRef.current.scrollHeight;
+  });
+
+  useEffect(() => {
     //transcribeFieldRef.current.scrollTop = transcribeFieldRef.current.scrollHeight;
     if (!window.navigator.mediaDevices.getUserMedia) {
       // Use our helper method to show an error on the page
@@ -382,10 +385,10 @@ const App = () => {
           // }
           // transcription += transcript + '\n';
         }
-        transcribeFieldRef.current.scrollTop =
-          transcribeFieldRef.current.scrollHeight;
-        translateFieldRef.current.scrollTop =
-          translateFieldRef.current.scrollHeight;
+        // transcribeFieldRef.current.scrollTop =
+        //   transcribeFieldRef.current.scrollHeight;
+        // translateFieldRef.current.scrollTop =
+        //   translateFieldRef.current.scrollHeight;
       }
     }
   };
@@ -508,73 +511,51 @@ const App = () => {
   return (
     <div className="App">
       <Grid container spacing={1} className={classes.container}>
-        {/* <Grid item xs={12} container justify="flex-start">
-          <Typography
-            style={{ marginTop: 20, marginBottom: 20 }}
-            variant="h6"
-            gutterBottom
-          >
-            Speaking in Tounges
-          </Typography>
-        </Grid> */}
         <Grid
           item
-          style={{
-            height: window.innerHeight / 3
-            //borderStyle: 'solid'
-          }}
+          style={
+            {
+              // borderStyle: 'solid'
+            }
+          }
           xs={12}
           sm={6}
         >
-          <NativeSelects
-            style={{ marginTop: 20 }}
-            label={'Source'}
-            options={[{ language: 'English', languageCode: 'en' }]}
-            disabled
-            value={'en'}
-          />
+          <Grid
+            item
+            xs={12}
+            style={
+              {
+                //borderStyle: 'solid'
+              }
+            }
+          >
+            <NativeSelects
+              style={{ marginTop: 20 }}
+              label={'Source'}
+              options={[{ language: 'English', languageCode: 'en' }]}
+              disabled
+              value={'en'}
+            />
+          </Grid>
           <Grid
             container
             ref={transcribeFieldRef}
             style={{
+              height: window.innerHeight / 4,
               marginTop: 10,
               borderStyle: 'solid',
               borderWidth: 'thin',
               borderRadius: 5,
               overflow: 'auto',
-              height: '75%',
               borderColor: '#808080a1'
             }}
             className={classes.root}
           >
-            <InteractiveList data={array} />
+            <Grid item>
+              <InteractiveList data={array} />
+            </Grid>
           </Grid>
-          {/* <TextField
-            //style={{ padding: 10 }}
-            //className={classes.textBox}
-            //flex
-            //disabled
-            //wrap="nowrap"
-            variant="outlined"
-            fullWidth
-            inputRef={transcribeFieldRef}
-            value={
-              isPartial
-                ? transcription + partialTranscript + '\n'
-                : transcription
-            }
-            margin="normal"
-            label="Transcription"
-            multiline
-            rowsMax="7"
-            InputProps={{
-              className: classes.input,
-              readOnly: true
-            }}
-            InputLabelProps={{
-              shrink: true
-            }}
-          /> */}
         </Grid>
         <Grid
           item
@@ -583,24 +564,21 @@ const App = () => {
           style={{
             height: window.innerHeight / 3
             //borderColor: 'red'
-            // borderStyle: 'solid'
+            //borderStyle: 'solid'
           }}
         >
           <Grid
+            item
             container
+            style={
+              {
+                //borderStyle: 'solid'
+              }
+            }
             spacing={2}
             alignItems="center"
-            //justify="space-between"
           >
-            <Grid
-              style={
-                {
-                  // backgroundColor: 'red'
-                }
-              }
-              item
-              xs={6}
-            >
+            <Grid item xs={6}>
               <NativeSelects
                 label={'Target'}
                 //disabled={isTranscribing}
@@ -645,17 +623,19 @@ const App = () => {
             container
             ref={translateFieldRef}
             style={{
+              height: window.innerHeight / 4,
               marginTop: 10,
               borderStyle: 'solid',
               borderWidth: 'thin',
               borderRadius: 5,
               overflow: 'auto',
-              height: '75%',
               borderColor: '#808080a1'
             }}
             className={classes.root}
           >
-            <InteractiveList data={translatedArray} />
+            <Grid item>
+              <InteractiveList data={translatedArray} />
+            </Grid>
           </Grid>
           {/* <TextField
             //className={classes.textBox}
@@ -678,7 +658,7 @@ const App = () => {
             }}
           /> */}
         </Grid>
-        <Grid item xs={12}>
+        <Grid style={{ marginTop: 10 }} item xs={12}>
           <LinearProgress
             className={classes.linearProgress}
             color={isPartial ? 'secondary' : 'white'}
